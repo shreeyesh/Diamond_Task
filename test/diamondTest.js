@@ -68,14 +68,14 @@ describe('DiamondTest', async function () {
   })
 
   it('should add test1 functions', async () => {
-    const Test1Facet = await ethers.getContractFactory('Test1Facet')
-    const test1Facet = await Test1Facet.deploy()
-    await test1Facet.deployed()
-    addresses.push(test1Facet.address)
-    const selectors = getSelectors(test1Facet).remove(['supportsInterface(bytes4)'])
+    const A = await ethers.getContractFactory('A')
+    const ACAP = await A.deploy()
+    await ACAP.deployed()
+    addresses.push(ACAP.address)
+    const selectors = getSelectors(ACAP).remove(['supportsInterface(bytes4)'])
     tx = await diamondCutFacet.diamondCut(
       [{
-        facetAddress: test1Facet.address,
+        facetAddress: ACAP.address,
         action: FacetCutAction.Add,
         functionSelectors: selectors
       }],
@@ -84,18 +84,18 @@ describe('DiamondTest', async function () {
     if (!receipt.status) {
       throw Error(`Diamond upgrade failed: ${tx.hash}`)
     }
-    result = await diamondLoupeFacet.facetFunctionSelectors(test1Facet.address)
+    result = await diamondLoupeFacet.facetFunctionSelectors(ACAP.address)
     assert.sameMembers(result, selectors)
   })
 
   it('should test function call', async () => {
-    const test1Facet = await ethers.getContractAt('Test1Facet', diamondAddress)
-    await test1Facet.test1Func10()
+    const ACAP = await ethers.getContractAt('A', diamondAddress)
+    await ACAP.test1Func10()
   })
 
   it('should replace supportsInterface function', async () => {
-    const Test1Facet = await ethers.getContractFactory('Test1Facet')
-    const selectors = getSelectors(Test1Facet).get(['supportsInterface(bytes4)'])
+    const A = await ethers.getContractFactory('A')
+    const selectors = getSelectors(A).get(['supportsInterface(bytes4)'])
     const testFacetAddress = addresses[3]
     tx = await diamondCutFacet.diamondCut(
       [{
@@ -109,53 +109,15 @@ describe('DiamondTest', async function () {
       throw Error(`Diamond upgrade failed: ${tx.hash}`)
     }
     result = await diamondLoupeFacet.facetFunctionSelectors(testFacetAddress)
-    assert.sameMembers(result, getSelectors(Test1Facet))
+    assert.sameMembers(result, getSelectors(A))
   })
 
-  it('should add test2 functions', async () => {
-    const Test2Facet = await ethers.getContractFactory('Test2Facet')
-    const test2Facet = await Test2Facet.deploy()
-    await test2Facet.deployed()
-    addresses.push(test2Facet.address)
-    const selectors = getSelectors(test2Facet)
-    tx = await diamondCutFacet.diamondCut(
-      [{
-        facetAddress: test2Facet.address,
-        action: FacetCutAction.Add,
-        functionSelectors: selectors
-      }],
-      ethers.constants.AddressZero, '0x', { gasLimit: 800000 })
-    receipt = await tx.wait()
-    if (!receipt.status) {
-      throw Error(`Diamond upgrade failed: ${tx.hash}`)
-    }
-    result = await diamondLoupeFacet.facetFunctionSelectors(test2Facet.address)
-    assert.sameMembers(result, selectors)
-  })
 
-  it('should remove some test2 functions', async () => {
-    const test2Facet = await ethers.getContractAt('Test2Facet', diamondAddress)
-    const functionsToKeep = ['test2Func1()', 'test2Func5()', 'test2Func6()', 'test2Func19()', 'test2Func20()']
-    const selectors = getSelectors(test2Facet).remove(functionsToKeep)
-    tx = await diamondCutFacet.diamondCut(
-      [{
-        facetAddress: ethers.constants.AddressZero,
-        action: FacetCutAction.Remove,
-        functionSelectors: selectors
-      }],
-      ethers.constants.AddressZero, '0x', { gasLimit: 800000 })
-    receipt = await tx.wait()
-    if (!receipt.status) {
-      throw Error(`Diamond upgrade failed: ${tx.hash}`)
-    }
-    result = await diamondLoupeFacet.facetFunctionSelectors(addresses[4])
-    assert.sameMembers(result, getSelectors(test2Facet).get(functionsToKeep))
-  })
 
   it('should remove some test1 functions', async () => {
-    const test1Facet = await ethers.getContractAt('Test1Facet', diamondAddress)
+    const ACAP = await ethers.getContractAt('A', diamondAddress)
     const functionsToKeep = ['test1Func2()', 'test1Func11()', 'test1Func12()']
-    const selectors = getSelectors(test1Facet).remove(functionsToKeep)
+    const selectors = getSelectors(ACAP).remove(functionsToKeep)
     tx = await diamondCutFacet.diamondCut(
       [{
         facetAddress: ethers.constants.AddressZero,
@@ -168,7 +130,7 @@ describe('DiamondTest', async function () {
       throw Error(`Diamond upgrade failed: ${tx.hash}`)
     }
     result = await diamondLoupeFacet.facetFunctionSelectors(addresses[3])
-    assert.sameMembers(result, getSelectors(test1Facet).get(functionsToKeep))
+    assert.sameMembers(result, getSelectors(ACAP).get(functionsToKeep))
   })
 
   it('remove all functions and facets except \'diamondCut\' and \'facets\'', async () => {
@@ -199,8 +161,7 @@ describe('DiamondTest', async function () {
 
   it('add most functions and facets', async () => {
     const diamondLoupeFacetSelectors = getSelectors(diamondLoupeFacet).remove(['supportsInterface(bytes4)'])
-    const Test1Facet = await ethers.getContractFactory('Test1Facet')
-    const Test2Facet = await ethers.getContractFactory('Test2Facet')
+    const A = await ethers.getContractFactory('A')
     // Any number of functions from any number of facets can be added/replaced/removed in a
     // single transaction
     const cut = [
@@ -217,12 +178,7 @@ describe('DiamondTest', async function () {
       {
         facetAddress: addresses[3],
         action: FacetCutAction.Add,
-        functionSelectors: getSelectors(Test1Facet)
-      },
-      {
-        facetAddress: addresses[4],
-        action: FacetCutAction.Add,
-        functionSelectors: getSelectors(Test2Facet)
+        functionSelectors: getSelectors(A)
       }
     ]
     tx = await diamondCutFacet.diamondCut(cut, ethers.constants.AddressZero, '0x', { gasLimit: 8000000 })
@@ -243,7 +199,6 @@ describe('DiamondTest', async function () {
     assert.sameMembers(facets[findAddressPositionInFacets(addresses[0], facets)][1], getSelectors(diamondCutFacet))
     assert.sameMembers(facets[findAddressPositionInFacets(addresses[1], facets)][1], diamondLoupeFacetSelectors)
     assert.sameMembers(facets[findAddressPositionInFacets(addresses[2], facets)][1], getSelectors(ownershipFacet))
-    assert.sameMembers(facets[findAddressPositionInFacets(addresses[3], facets)][1], getSelectors(Test1Facet))
-    assert.sameMembers(facets[findAddressPositionInFacets(addresses[4], facets)][1], getSelectors(Test2Facet))
+    assert.sameMembers(facets[findAddressPositionInFacets(addresses[3], facets)][1], getSelectors(A))
   })
 })

@@ -2,6 +2,8 @@
 /* eslint prefer-const: "off" */
 
 const { getSelectors, FacetCutAction } = require('./libraries/diamond.js')
+// const { BigNumber } = require("ethers");
+
 
 async function deployDiamond () {
   const accounts = await ethers.getSigners()
@@ -32,7 +34,8 @@ async function deployDiamond () {
   console.log('Deploying facets')
   const FacetNames = [
     'DiamondLoupeFacet',
-    'OwnershipFacet'
+    'OwnershipFacet',
+    'A'
   ]
   const cut = []
   for (const FacetName of FacetNames) {
@@ -62,6 +65,12 @@ async function deployDiamond () {
     throw Error(`Diamond upgrade failed: ${tx.hash}`)
   }
   console.log('Completed diamond cut')
+  const A = await ethers.getContractAt("A", diamond.address);
+  await A.setNumber(10);
+  console.log("Set number is",await A.getNumber());
+
+  await A.setNumber(5);
+  console.log("Updated number is",await A.getNumber());
   return diamond.address
 }
 
