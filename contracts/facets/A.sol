@@ -5,7 +5,7 @@ contract A {
     uint256 public number;
     bool public reentrant = false;
     function setNumber(uint256 _number) public {
-        number = number + _number + 1000000000000000;
+        number = number + _number;
     }
     function getNumber() public view returns (uint256) {
         return number;
